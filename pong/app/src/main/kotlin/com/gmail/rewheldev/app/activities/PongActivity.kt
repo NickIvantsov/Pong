@@ -3,6 +3,7 @@ package com.gmail.rewheldev.app.activities
 import android.app.Activity
 import android.graphics.Point
 import android.os.Bundle
+import android.view.MotionEvent
 import com.gmail.rewheldev.PongGame
 import timber.log.Timber
 
@@ -18,6 +19,7 @@ class PongActivity : Activity() {
         setContentView(pongGame)
         Timber.d("In onCreate")
     }
+
 
     override fun onResume() {
         super.onResume()

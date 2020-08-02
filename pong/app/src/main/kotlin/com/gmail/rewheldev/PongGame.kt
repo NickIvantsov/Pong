@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import timber.log.Timber
@@ -39,8 +41,8 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
     private val mFontMargin = mScreenX / 75
 
     // The game objects
-    private val mBat: Bat? = null
-    private val mBall: Ball? = null
+    private val mBat: Bat = Bat(mScreenX, mScreenY)
+    private val mBall: Ball = Ball(mScreenX)
 
     // The current score and lives remaining
     private var mScore = 0
@@ -62,6 +64,7 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
 
     private fun startNewGame() {
         // Put the ball back to the starting position
+        mBall.reset(mScreenX, mScreenY)
         // Reset the score and the player's chances
         mScore = 0
         mLives = 3
@@ -74,8 +77,12 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
             //Заполняем экран сплошным цветом
             mCanvas?.drawColor(Color.argb(255, 26, 128, 182))
             // Выберите цвет для рисования
-            mPaint.color = Color.argb(255, 255, 255, 255);
-//Нарисовать летучую мышь и мяч
+            mPaint.color = Color.argb(255, 255, 255, 255)
+            //Нарисовать летучую мышь и мяч
+            mCanvas?.let {
+                it.drawRect(mBall.mRect, mPaint)
+                it.drawRect(mBat.mRect, mPaint)
+            }
 
             //Выберите размер шрифта
             mPaint.textSize = mFontSize.toFloat()
@@ -91,7 +98,7 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
 
 // Display the drawing on screen
 // unlockCanvasAndPost is a method of SurfaceView
-            mOurHolder.unlockCanvasAndPost(mCanvas);
+            mOurHolder.unlockCanvasAndPost(mCanvas)
         }
     }
 
@@ -127,7 +134,7 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
             // Сколько времени занимает этот кадр / цикл?
             // Сохраняем ответ в timeThisFrame
             val timeThisFrame =
-                System.currentTimeMillis() - frameStartTime;
+                System.currentTimeMillis() - frameStartTime
             // Убедитесь, что timeThisFrame составляет не менее 1 миллисекунды
             // потому что случайно деление
             // на ноль вылетает игра
@@ -135,27 +142,52 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
                 // Сохраняем текущую частоту кадров в mFPS
                 // готовы перейти к методам обновления
                 // mBat и mBall следующий кадр / цикл
-                mFPS = MILLIS_IN_SECOND / timeThisFrame;
+                mFPS = MILLIS_IN_SECOND / timeThisFrame
             }
         }
     }
 
     private fun detectCollisions() {
         // Летучая мышь ударила по мячу?
+        if (RectF.intersects(mBat.mRect, mBall.mRect)) {
+// Realistic-ish bounce
+            mBall.batBounce(mBat.mRect)
+            mBall.increaseVelocity()
+            mScore++
+            //mSP.play(mBeepID, 1, 1, 0, 0, 1)
+        }
 
         // Мяч попал в край экрана
 
         // Низ
+        if (mBall.mRect.bottom >= mScreenY) {
+            mBall.reverseYVelocity()
+            mLives--
+            if (mLives == 0) {
+                mPaused = true
+                startNewGame()
+            }
+        }
 
         // Верхний
-
-        // Осталось
-
-        // Правильно
+        if (mBall.mRect.top <= 0) {
+            mBall.reverseYVelocity()
+        }
+        // Налево
+        if (mBall.mRect.left <= 0) {
+            mBall.reverseXVelocity()
+        }
+        // Направо
+        if (mBall.mRect.right >= mScreenX) {
+            mBall.reverseXVelocity()
+        }
     }
 
+    // Обновляем позицию мяча.
+    // Вызывается каждый кадр / цикл
     private fun update() {
-        //todo need impl
+        mBall.update(mFPS)
+        mBat.update(mFPS)
     }
 
     fun pause() {
@@ -172,5 +204,35 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
 
         mGameThread = Thread(this)
         mGameThread?.start()
+    }
+
+    override fun onTouchEvent(motionEvent: MotionEvent?): Boolean {
+        when (motionEvent?.action?.and(MotionEvent.ACTION_MASK)) {
+            MotionEvent.ACTION_DOWN -> {
+                // If the game was paused unpause
+                mPaused = false
+                // Where did the touch happen
+                if (motionEvent.x > mScreenX / 2) {
+                    // On the right hand side
+                    mBat.setMovementState(mBat.RIGHT)
+                } else {
+                    // On the left hand side
+                    mBat.setMovementState(mBat.LEFT)
+                }
+            }
+            // The player lifted their finger
+            // from anywhere on screen.
+            // It is possible to create bugs by using
+            // multiple fingers. We will use more
+            // complicated and robust touch handling
+            // in later projects
+            MotionEvent.ACTION_UP -> {
+                // Stop the bat moving
+                mBat.setMovementState(mBat.STOPPED)
+            }
+
+
+        }
+        return true
     }
 }
