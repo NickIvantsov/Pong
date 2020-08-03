@@ -6,50 +6,83 @@ import kotlin.math.abs
 
 
 class Ball(screenX: Int) {
+    @Volatile
     private var mXVelocity: Float = 0f
+    @Volatile
     private var mYVelocity: Float = 0f
     private val mBallWidth: Float
     private val mBallHeight: Float
     val mRect: RectF
 
+    companion object{
+        private  const val DEBUGGING = true
+    }
+
     init {
         mBallWidth = (screenX / 100).toFloat()
         mBallHeight = (screenX / 100).toFloat()
+        if (DEBUGGING){
+            Timber.d(" init mBallWidth = $mBallWidth")
+            Timber.d(" init mBallHeight = $mBallHeight")
+        }
         mRect = RectF()
     }
 
-    fun update(fps: Long) {
-        if (fps <= 0) return
+   /* fun update(fps: Long) {
         // Переместить шар на основе
         // горизонтальный (mXVelocity) и
         // вертикальная (mYVelocity) скорость
         // и текущая частота кадров (кадр / с)
 
         // Move the top left corner
-        mRect.left = mRect.left + mXVelocity / fps
-        mRect.top = mRect.top +  mYVelocity / fps
+        mRect.left = mRect.left + (mXVelocity / fps)
+        mRect.top = mRect.top +  (mYVelocity / fps)
 // Match up the bottom right corner
 // based on the size of the ball
         mRect.right = mRect.left + mBallWidth
         mRect.bottom = mRect.top + mBallHeight
+        if (DEBUGGING){
+            Timber.d(
+                "fps = $fps"
+            )
+            Timber.d(
+                "mRect.left %s, mRect.top %s, mRect.right %s, mRect.bottom %s",
+                mRect.left,
+                mRect.top,
+                mRect.right,
+                mRect.bottom
+            )
+        }
 
-       /* Timber.d(
-            "mRect.left %s, mRect.top %s, mRect.right %s, mRect.bottom %s",
-            mRect.left,
-            mRect.top,
-            mRect.right,
-            mRect.bottom
-        )*/
+    }*/
+
+    // Update the ball position.
+    // Called each frame/loop
+    fun update(fps: Long) {
+// Move the ball based upon the
+// horizontal (mXVelocity) and
+// vertical(mYVelocity) speed
+// and the current frame rate(fps)
+// Move the top left corner
+        mRect.left = mRect.left + (mXVelocity / fps)
+        mRect.top = mRect.top + (mYVelocity / fps)
+        // Match up the bottom right corner
+// based on the size of the ball
+        mRect.right = mRect.left + mBallWidth
+        mRect.bottom = mRect.top + mBallHeight
     }
-
     // Reverse the vertical direction of travel
     fun reverseYVelocity() {
         mYVelocity = -mYVelocity
+        if (DEBUGGING){
+            Timber.i("reverseYVelocity() mYVelocity = $mYVelocity")
+        }
     }
 
     // Reverse the horizontal direction of travel
     fun reverseXVelocity() {
         mXVelocity = -mXVelocity
+        Timber.i("reverseXVelocity() mXVelocity = $mXVelocity")
     }
 
     fun reset(x: Int, y: Int) {

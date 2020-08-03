@@ -14,6 +14,7 @@ import timber.log.Timber
 class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnable {
     // Are we debugging?
     private val DEBUGGING = true
+    private val DEBUGGING_DETECT_COLLISIONS = true
 
     companion object {
         // The number of milliseconds in a second
@@ -26,7 +27,7 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
     private val mPaint: Paint = Paint()
 
     // How many frames per second did we get?
-    private var mFPS: Long = 0
+    private var mFPS: Long = 1
 
 
     // Holds the resolution of the screen
@@ -160,7 +161,13 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
         // Мяч попал в край экрана
 
         // Низ
-        if (mBall.mRect.bottom >= mScreenY) {
+        if (mBall.mRect.bottom > mScreenY) {
+            if (DEBUGGING_DETECT_COLLISIONS) {
+                Timber.d("mBall.mRect.bottom > mScreenY =  ${mBall.mRect.bottom > mScreenY}")
+                Timber.d("mBall.mRect.bottom =  ${mBall.mRect.bottom}")
+                Timber.d("mScreenY =  $mScreenY")
+            }
+
             mBall.reverseYVelocity()
             mLives--
             if (mLives == 0) {
@@ -170,15 +177,31 @@ class PongGame(context: Context, x: Int, y: Int) : SurfaceView(context), Runnabl
         }
 
         // Верхний
-        if (mBall.mRect.top <= 0) {
+        if (mBall.mRect.top < 0) {
+            if (DEBUGGING_DETECT_COLLISIONS) {
+                Timber.d("mBall.mRect.top < 0 =  ${mBall.mRect.top < 0}")
+                Timber.d("mBall.mRect.top =  ${mBall.mRect.top}")
+                Timber.d("mScreenY =  $mScreenY")
+            }
             mBall.reverseYVelocity()
         }
         // Налево
-        if (mBall.mRect.left <= 0) {
+        if (mBall.mRect.left < 0) {
+            if (DEBUGGING_DETECT_COLLISIONS) {
+                Timber.d("mBall.mRect.left < 0 =  ${mBall.mRect.left < 0}")
+                Timber.d("mBall.mRect.left =  ${mBall.mRect.left}")
+                Timber.d("mScreenX =  $mScreenX")
+            }
+
             mBall.reverseXVelocity()
         }
         // Направо
-        if (mBall.mRect.right >= mScreenX) {
+        if (mBall.mRect.right > mScreenX) {
+            if (DEBUGGING_DETECT_COLLISIONS) {
+                Timber.d("mBall.mRect.right > mScreenX =  ${mBall.mRect.right > mScreenX}")
+                Timber.d("mBall.mRect.right =  ${mBall.mRect.right}")
+                Timber.d("mScreenX =  $mScreenX")
+            }
             mBall.reverseXVelocity()
         }
     }
